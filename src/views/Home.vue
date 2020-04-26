@@ -60,6 +60,7 @@
 <script>
 // @ is an alias to /src
 import open from 'open'
+import Registry from 'winreg'
 
 export default {
   name: 'Home',
@@ -80,6 +81,7 @@ export default {
       dialogVisible: false,
     }
   },
+  mounted() {},
   methods: {
     openLink(link) {
       open(link.protocol + link.href, { app: link.app || 'iexplore' })
