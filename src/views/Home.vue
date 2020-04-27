@@ -45,6 +45,39 @@
         >
       </span>
     </el-dialog>
+    <el-dialog
+      :visible.sync="checkDialogVisible"
+      width="500px"
+      title="注意"
+      @open="handleOpen"
+    >
+      <p>
+        该链接需要用 {{ browser }}打开，但本机未在默认地址发现{{
+          browser
+        }},若您安装在非默认地址，请指定
+      </p>
+      <el-form
+        label-width="90px"
+        label-position="right"
+        size="small"
+        :model="formModel"
+        ref="form"
+        :rules="rules"
+      >
+        <el-form-item label="安装地址 ">
+          <el-input v-model="formModel.text" class="input-with-select">
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleSubmit" size="small"
+          >确 定 [enter]</el-button
+        >
+        <el-button @click="dialogVisible = false" size="small"
+          >取 消 [esc]</el-button
+        >
+      </span>
+    </el-dialog>
     <el-button
       size="mini"
       v-for="(link, index) in linkList"
@@ -60,8 +93,7 @@
 <script>
 // @ is an alias to /src
 import open from 'open'
-import Registry from 'winreg'
-
+const { ipcRenderer } = require('electron')
 export default {
   name: 'Home',
   components: {},
@@ -77,14 +109,34 @@ export default {
       rules: {
         href: [{ required: true, message: '请输入链接地址', trigger: 'blur' }],
       },
-
       dialogVisible: false,
+
+      checkDialogVisible: false,
+      location: {
+        chrome: null,
+        firefox: null,
+        iexplore: true,
+      },
+      browser: '',
     }
   },
-  mounted() {},
+  mounted() {
+    const location = ipcRenderer.sendSync('checkBrowser')
+    this.location = Object.assign(this.location, {
+      chrome: typeof location.chrome === 'string' && location.chrome,
+      firefox: typeof location.firefox === 'string' && location.firefox,
+    })
+  },
   methods: {
     openLink(link) {
-      open(link.protocol + link.href, { app: link.app || 'iexplore' })
+      const app = link.app || 'iexplore'
+      console.log(this.location)
+      if (!this.location[app]) {
+        this.checkDialogVisible = true
+        this.browser = app
+      } else {
+        open(link.protocol + link.href, { app })
+      }
     },
     handleOpen() {
       this.$nextTick(() => {
