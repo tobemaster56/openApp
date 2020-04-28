@@ -1,7 +1,7 @@
 'use strict'
 
 import { app, protocol, BrowserWindow } from 'electron'
-const { ipcMain, dialog } = require('electron')
+const { ipcMain } = require('electron')
 
 ipcMain.on('checkBrowser', event => {
   event.returnValue = {
@@ -43,6 +43,7 @@ function createWindow() {
     createProtocol('app')
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
+    win.webContents.openDevTools()
   }
 
   win.on('closed', () => {

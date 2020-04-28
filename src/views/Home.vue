@@ -196,18 +196,21 @@ export default {
       return this.linkList.filter(link => link.loved)
     },
   },
-  mounted() {
-    const location = ipcRenderer.sendSync('checkBrowser')
-    this.location = Object.assign(this.location, {
-      chrome: typeof location.chrome === 'string' && location.chrome,
-      firefox: typeof location.firefox === 'string' && location.firefox,
-    })
-  },
+  mounted() {},
   methods: {
+    getLocation() {
+      const location = ipcRenderer.sendSync('checkBrowser')
+      console.log(location)
+      this.location = Object.assign(this.location, {
+        chrome: typeof location.chrome === 'string' && location.chrome,
+        firefox: typeof location.firefox === 'string' && location.firefox,
+        iexplore: process.platform === 'win32' ? true : false,
+      })
+    },
     download() {
       let url
       switch (this.browser) {
-        case 'chrome ':
+        case 'chrome':
           url = 'https://www.google.com/intl/zh-CN/chrome/'
           break
         case 'firefox':
@@ -239,12 +242,14 @@ export default {
         })
     },
     openLink(link) {
+      this.getLocation()
+      console.log(this.location)
       const app = link.app || 'iexplore'
       if (!this.location[app]) {
         this.checkDialogVisible = true
         this.browser = app
       } else {
-        open(link.protocol + link.href, { app })
+        open((link.protocol ? link.protocol : '') + link.href, { app })
       }
     },
     handleOpen() {
