@@ -10,20 +10,6 @@ ipcMain.on('checkBrowser', event => {
   }
 })
 
-ipcMain.on('open-file-dialog', function(event) {
-  dialog
-    .showOpenDialog(win, {
-      properties: ['openFile'],
-    })
-    .then(result => {
-      if (result.filePaths.length) {
-        event.sender.send('selected-file', result.filePaths[0])
-      }
-    })
-    .catch(err => {
-      console.log(err)
-    })
-})
 import {
   createProtocol,
   installVueDevtools,
@@ -42,8 +28,8 @@ protocol.registerSchemesAsPrivileged([
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 800,
     webPreferences: {
       nodeIntegration: true,
     },

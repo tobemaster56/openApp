@@ -3,7 +3,7 @@
     <el-dialog
       :visible.sync="dialogVisible"
       width="500px"
-      title="添加链接"
+      title="添加应用"
       @open="handleOpen"
     >
       <el-form
@@ -40,11 +40,9 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="handleSubmit" size="small"
-          >确 定 [ enter ]</el-button
+          >确 定</el-button
         >
-        <el-button @click="dialogVisible = false" size="small"
-          >取 消 [ esc ]</el-button
-        >
+        <el-button @click="dialogVisible = false" size="small">取 消</el-button>
       </span>
     </el-dialog>
     <el-dialog
@@ -54,9 +52,10 @@
       @open="handleOpen"
     >
       <p>
-        该链接需要用 {{ browser }}打开，但本机未在默认地址发现{{
-          browser
-        }},若您安装在非默认地址，请指定
+        该链接需要用
+        <svg-icon :icon-class="browser"></svg-icon> 打开，但本机未在默认地址发现
+        <svg-icon :icon-class="browser"></svg-icon>
+        ,若您安装在非默认地址，请指定
       </p>
       <el-form
         label-width="90px"
@@ -67,41 +66,110 @@
         :rules="rules"
       >
         <el-form-item label="安装地址 ">
-          <el-input v-model="browserPath" class="input-with-select"> </el-input>
-          <i class="el-icon-folder" @click="selectBrowser"></i>
+          <el-input
+            v-model="browserPath"
+            class="input-with-select path"
+            @click.native="selectBrowser"
+            readonly
+          >
+            <i slot="suffix" class="el-icon-folder"></i>
+          </el-input>
         </el-form-item>
       </el-form>
+      <div>
+        <span>或者，通过以下地址下载安装程序</span>
+        <div>
+          <p>
+            <svg-icon
+              :icon-class="browser"
+              style="font-size: 20px;"
+              @click.native="download"
+            ></svg-icon>
+          </p>
+        </div>
+      </div>
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="handleSubmit" size="small"
-          >确 定 [enter]</el-button
+        <el-button type="primary" @click="handleCheck" size="small"
+          >确 定</el-button
         >
-        <el-button @click="dialogVisible = false" size="small"
-          >取 消 [esc]</el-button
+        <el-button @click="checkDialogVisible = false" size="small"
+          >取 消</el-button
         >
       </span>
     </el-dialog>
-    <el-button
-      size="mini"
-      v-for="(link, index) in linkList"
-      :key="index"
-      @click="openLink(link)"
-    >
-      {{ link.text }}
-    </el-button>
-    <el-button @click="dialogVisible = true">添加链接</el-button>
+
+    <div class="container">
+      <div>
+        <div>应用列表</div>
+        <ul>
+          <li
+            v-for="(link, index) in linkList"
+            :key="index"
+            @click="openLink(link)"
+          >
+            <div>
+              <svg-icon :icon-class="link.app"></svg-icon>
+              <span>{{ link.text }}</span>
+            </div>
+            <svg-icon
+              :icon-class="link.loved ? 'loved' : 'unlove'"
+              class="right"
+              @click.native.stop="toggleLoved(link)"
+            ></svg-icon>
+          </li>
+        </ul>
+
+        <el-button @click="dialogVisible = true">添加应用</el-button>
+      </div>
+      <div>
+        <div>我收藏的应用</div>
+        <ul>
+          <li
+            v-for="(link, index) in lovedApps"
+            :key="index"
+            @click="openLink(link)"
+          >
+            <div>
+              <svg-icon :icon-class="link.app"></svg-icon>
+              <span>{{ link.text }}</span>
+            </div>
+            <i class="el-icon-delete right" @click="link.loved = false"></i>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
 import open from 'open'
-const { ipcRenderer, remote } = require('electron')
+const { ipcRenderer, remote, shell } = require('electron')
 export default {
   name: 'Home',
   components: {},
   data() {
     return {
-      linkList: [],
+      linkList: [
+        {
+          href: 'https://www.baidu.com',
+          text: '百度',
+          app: 'chrome',
+          loved: true,
+        },
+        {
+          href: 'https://www.tencent.com',
+          text: '腾讯',
+          app: 'firefox',
+          loved: false,
+        },
+        {
+          href: 'https://www.sina.com',
+          text: '新浪',
+          app: 'iexplore',
+          loved: false,
+        },
+      ],
       formModel: {
         href: '',
         text: '',
@@ -117,11 +185,16 @@ export default {
       location: {
         chrome: null,
         firefox: null,
-        iexplore: true,
+        iexplore: null,
       },
       browser: '',
       browserPath: '',
     }
+  },
+  computed: {
+    lovedApps() {
+      return this.linkList.filter(link => link.loved)
+    },
   },
   mounted() {
     const location = ipcRenderer.sendSync('checkBrowser')
@@ -131,6 +204,25 @@ export default {
     })
   },
   methods: {
+    download() {
+      let url
+      switch (this.browser) {
+        case 'chrome ':
+          url = 'https://www.google.com/intl/zh-CN/chrome/'
+          break
+        case 'firefox':
+          url = 'https://www.mozilla.org/zh-CN/firefox/new/'
+          break
+        default:
+          url =
+            'https://www.microsoft.com/en-us/download/internet-explorer.aspx'
+      }
+      shell.openExternal(url)
+    },
+    toggleLoved(link) {
+      link.loved = !link.loved
+    },
+    handleCheck() {},
     selectBrowser() {
       remote.dialog
         .showOpenDialog(remote.getCurrentWindow(), {
@@ -173,11 +265,47 @@ export default {
   },
 }
 </script>
-<style>
+<style lang="less">
 .el-select .el-input {
   width: 90px;
 }
 .input-with-select .el-input-group__prepend {
   background-color: #fff;
+}
+.input-with-select.path input {
+  cursor: pointer;
+}
+ul {
+  padding: 0;
+}
+li {
+  padding-left: 10px;
+  list-style: none;
+  line-height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .right {
+    display: none;
+  }
+  &:hover {
+    background-color: #eee;
+    .right {
+      display: block;
+    }
+  }
+  svg {
+    margin-right: 10px;
+  }
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  > div {
+    width: 200px;
+  }
 }
 </style>
