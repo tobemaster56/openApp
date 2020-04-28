@@ -1,13 +1,28 @@
 'use strict'
 
 import { app, protocol, BrowserWindow } from 'electron'
-const { ipcMain } = require('electron')
+const { ipcMain, dialog } = require('electron')
 
 ipcMain.on('checkBrowser', event => {
   event.returnValue = {
     chrome: require('chrome-location'),
     firefox: require('firefox-location'),
   }
+})
+
+ipcMain.on('open-file-dialog', function(event) {
+  dialog
+    .showOpenDialog(win, {
+      properties: ['openFile'],
+    })
+    .then(result => {
+      if (result.filePaths.length) {
+        event.sender.send('selected-file', result.filePaths[0])
+      }
+    })
+    .catch(err => {
+      console.log(err)
+    })
 })
 import {
   createProtocol,

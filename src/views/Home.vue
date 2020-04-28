@@ -39,9 +39,11 @@
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false" size="small">取 消</el-button>
         <el-button type="primary" @click="handleSubmit" size="small"
-          >确 定</el-button
+          >确 定 [ enter ]</el-button
+        >
+        <el-button @click="dialogVisible = false" size="small"
+          >取 消 [ esc ]</el-button
         >
       </span>
     </el-dialog>
@@ -65,8 +67,8 @@
         :rules="rules"
       >
         <el-form-item label="安装地址 ">
-          <el-input v-model="formModel.text" class="input-with-select">
-          </el-input>
+          <el-input v-model="browserPath" class="input-with-select"> </el-input>
+          <i class="el-icon-folder" @click="selectBrowser"></i>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -93,7 +95,7 @@
 <script>
 // @ is an alias to /src
 import open from 'open'
-const { ipcRenderer } = require('electron')
+const { ipcRenderer, remote } = require('electron')
 export default {
   name: 'Home',
   components: {},
@@ -118,6 +120,7 @@ export default {
         iexplore: true,
       },
       browser: '',
+      browserPath: '',
     }
   },
   mounted() {
@@ -128,9 +131,23 @@ export default {
     })
   },
   methods: {
+    selectBrowser() {
+      remote.dialog
+        .showOpenDialog(remote.getCurrentWindow(), {
+          properties: ['openFile'],
+        })
+        .then(result => {
+          if (result.filePaths.length) {
+            console.log(result.filePaths[0])
+            this.browserPath = result.filePaths[0]
+          }
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
     openLink(link) {
       const app = link.app || 'iexplore'
-      console.log(this.location)
       if (!this.location[app]) {
         this.checkDialogVisible = true
         this.browser = app
