@@ -1,7 +1,8 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, Menu, dialog } from 'electron'
 const { ipcMain } = require('electron')
+const { autoUpdater } = require('electron-updater')
 
 ipcMain.on('checkBrowser', event => {
   event.returnValue = {
@@ -25,11 +26,219 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
 ])
 
+let template = [
+  {
+    label: '查看',
+    submenu: [
+      {
+        label: '重载',
+        accelerator: 'CmdOrCtrl+R',
+        click: function(item, focusedWindow) {
+          if (focusedWindow) {
+            // 重载之后, 刷新并关闭所有的次要窗体
+            if (focusedWindow.id === 1) {
+              BrowserWindow.getAllWindows().forEach(function(win) {
+                if (win.id > 1) {
+                  win.close()
+                }
+              })
+            }
+            focusedWindow.reload()
+          }
+        },
+      },
+      {
+        label: '切换全屏',
+        accelerator: (function() {
+          if (process.platform === 'darwin') {
+            return 'Ctrl+Command+F'
+          } else {
+            return 'F11'
+          }
+        })(),
+        click: function(item, focusedWindow) {
+          if (focusedWindow) {
+            focusedWindow.setFullScreen(!focusedWindow.isFullScreen())
+          }
+        },
+      },
+      {
+        label: '切换开发者工具',
+        accelerator: (function() {
+          if (process.platform === 'darwin') {
+            return 'Alt+Command+I'
+          } else {
+            return 'Ctrl+Shift+I'
+          }
+        })(),
+        click: function(item, focusedWindow) {
+          if (focusedWindow) {
+            focusedWindow.toggleDevTools()
+          }
+        },
+      },
+      {
+        type: 'separator',
+      },
+    ],
+  },
+  {
+    label: '窗口',
+    role: 'window',
+    submenu: [
+      {
+        label: '最小化',
+        accelerator: 'CmdOrCtrl+M',
+        role: 'minimize',
+      },
+      {
+        label: '关闭',
+        accelerator: 'CmdOrCtrl+W',
+        role: 'close',
+      },
+      {
+        type: 'separator',
+      },
+      {
+        label: '重新打开窗口',
+        accelerator: 'CmdOrCtrl+Shift+T',
+        enabled: false,
+        key: 'reopenMenuItem',
+        click: function() {
+          app.emit('activate')
+        },
+      },
+    ],
+  },
+  {
+    label: '帮助',
+    role: 'help',
+    submenu: [
+      {
+        label: '关于',
+        click: function() {
+          // todo 弹出关于窗口
+        },
+      },
+    ],
+  },
+]
+
+function addUpdateMenuItems(items, position) {
+  if (process.mas) return
+
+  const version = app.getVersion()
+  let updateItems = [
+    {
+      label: '检查更新',
+      key: 'checkForUpdate',
+      click: function() {
+        autoUpdater.checkForUpdatesAndNotify()
+      },
+    },
+    {
+      label: '重启并安装更新',
+      enabled: true,
+      visible: false,
+      key: 'restartToUpdate',
+      click: function() {
+        require('electron').autoUpdater.quitAndInstall()
+      },
+    },
+  ]
+
+  items.splice.apply(items, [position, 0].concat(updateItems))
+}
+
+function findReopenMenuItem() {
+  const menu = Menu.getApplicationMenu()
+  if (!menu) return
+
+  let reopenMenuItem
+  menu.items.forEach(function(item) {
+    if (item.submenu) {
+      item.submenu.items.forEach(function(item) {
+        if (item.key === 'reopenMenuItem') {
+          reopenMenuItem = item
+        }
+      })
+    }
+  })
+  return reopenMenuItem
+}
+
+if (process.platform === 'darwin') {
+  const name = app.getName()
+  template.unshift({
+    label: name,
+    submenu: [
+      {
+        label: `关于 ${name}`,
+        role: 'about',
+      },
+      {
+        type: 'separator',
+      },
+      {
+        label: '服务',
+        role: 'services',
+        submenu: [],
+      },
+      {
+        type: 'separator',
+      },
+      {
+        label: `隐藏 ${name}`,
+        accelerator: 'Command+H',
+        role: 'hide',
+      },
+      {
+        label: '隐藏其它',
+        accelerator: 'Command+Alt+H',
+        role: 'hideothers',
+      },
+      {
+        label: '显示全部',
+        role: 'unhide',
+      },
+      {
+        type: 'separator',
+      },
+      {
+        label: '退出',
+        accelerator: 'Command+Q',
+        click: function() {
+          app.quit()
+        },
+      },
+    ],
+  })
+
+  // 窗口菜单.
+  template[3].submenu.push(
+    {
+      type: 'separator',
+    },
+    {
+      label: '前置所有',
+      role: 'front',
+    }
+  )
+
+  addUpdateMenuItems(template[0].submenu, 1)
+}
+
+if (process.platform === 'win32') {
+  const helpMenu = template[template.length - 1].submenu
+  addUpdateMenuItems(helpMenu, 0)
+}
+
 function createWindow() {
-  // Create the browser window.
   win = new BrowserWindow({
     width: 1200,
     height: 800,
+    minHeight: 600,
+    minWidth: 800,
     webPreferences: {
       nodeIntegration: true,
     },
@@ -38,12 +247,9 @@ function createWindow() {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-    if (!process.env.IS_TEST) win.webContents.openDevTools()
   } else {
     createProtocol('app')
-    // Load the index.html when not in development
     win.loadURL('app://./index.html')
-    win.webContents.openDevTools()
   }
 
   win.on('closed', () => {
@@ -86,6 +292,9 @@ app.on('ready', async () => {
     }
   }
   createWindow()
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
 })
 
 // Exit cleanly on request from parent process in development mode.
