@@ -26,7 +26,7 @@ module.exports = {
       builderOptions: {
         // options placed here will be merged with default configuration and passed to electron-builder
         win: {
-          target: ['portable'],
+          target: ['nsis'],
         },
         nsis: {
           oneClick: false,
