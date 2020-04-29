@@ -1,0 +1,20 @@
+platform:
+  - x86
+
+cache:
+  - node_modules
+  - '%APPDATA%\npm-cache'
+  - '%USERPROFILE%\.electron'
+
+install:
+  - ps: Install-Product node 12 x86
+  - npm install
+
+build_script:
+  - npm run electron:build-win
+
+test: off
+
+branches:
+  only:
+    - master

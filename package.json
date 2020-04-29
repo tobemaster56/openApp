@@ -1,6 +1,6 @@
 {
   "name": "open-app",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "lian.jing@ominidata.com",
   "description": "open link with designated App",
   "private": true,
@@ -9,7 +9,7 @@
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "electron:build": "vue-cli-service electron:build",
-    "electron:build-win": "vue-cli-service electron:build --win --ia32",
+    "electron:build-win": "vue-cli-service electron:build --win --ia32 --publish onTagOrDraft",
     "electron:build-win64": "vue-cli-service electron:build --win --x64",
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
