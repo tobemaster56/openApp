@@ -23,7 +23,7 @@ autoUpdater.on('error', error => {
 autoUpdater.on('update-available', () => {
   dialog.showMessageBox(
     {
-      type: '提示',
+      type: 'info',
       title: '软件有更新',
       message: '检查到软件有最新版本，是否立即更新',
       buttons: ['更新', '不更新'],
