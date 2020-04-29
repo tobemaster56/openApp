@@ -1,6 +1,6 @@
 {
   "name": "open-app",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": "lian.jing@ominidata.com",
   "description": "open link with designated App",
   "private": true,
