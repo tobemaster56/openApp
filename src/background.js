@@ -1,8 +1,8 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, Menu, dialog } from 'electron'
+import { app, protocol, BrowserWindow, Menu } from 'electron'
 const { ipcMain } = require('electron')
-const { autoUpdater } = require('electron-updater')
+const { checkForUpdates } = require('./updater')
 
 ipcMain.on('checkBrowser', event => {
   event.returnValue = {
@@ -20,11 +20,6 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
-
-// Scheme must be registered before the app is ready
-protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { secure: true, standard: true } },
-])
 
 let template = [
   {
@@ -132,18 +127,7 @@ function addUpdateMenuItems(items, position) {
     {
       label: '检查更新',
       key: 'checkForUpdate',
-      click: function() {
-        autoUpdater.checkForUpdatesAndNotify()
-      },
-    },
-    {
-      label: '重启并安装更新',
-      enabled: true,
-      visible: false,
-      key: 'restartToUpdate',
-      click: function() {
-        require('electron').autoUpdater.quitAndInstall()
-      },
+      click: checkForUpdates,
     },
   ]
 
@@ -232,6 +216,11 @@ if (process.platform === 'win32') {
   const helpMenu = template[template.length - 1].submenu
   addUpdateMenuItems(helpMenu, 0)
 }
+
+// Scheme must be registered before the app is ready
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { secure: true, standard: true } },
+])
 
 function createWindow() {
   win = new BrowserWindow({
