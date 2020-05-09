@@ -117,7 +117,7 @@
           :disabled="restart"
           >重启安装更新</el-button
         >
-        <el-button @click="checkDialogVisible = false" size="small"
+        <el-button @click="downloadVisibile = false" size="small"
           >取 消</el-button
         >
       </span>
