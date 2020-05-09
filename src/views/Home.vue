@@ -100,7 +100,7 @@
     <el-dialog
       :visible.sync="downloadVisibile"
       width="500px"
-      title="下载更新..."
+      :title="downloadTitle"
     >
       <p>
         <el-progress
@@ -217,6 +217,7 @@ export default {
       downloadVisibile: false,
       restart: true,
       percentage: 0,
+      downloadTitle: '下载更新...',
     }
   },
   computed: {
@@ -246,12 +247,13 @@ export default {
 
     ipcRenderer.on('update-downloaded', () => {
       this.restart = false
+      this.downloadTitle = '下载完成'
     })
     ipcRenderer.on('download-update', () => {
       this.downloadVisibile = true
+      this.downloadTitle = '下载更新...'
     })
     ipcRenderer.on('download-progress', (event, obj) => {
-      console.log(obj)
       this.percentage = obj.percent
     })
     ipcRenderer.on('update-error', (event, error) => {
