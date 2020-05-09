@@ -27,7 +27,7 @@ ipcMain.on('cancelDownloadUpdate', () => {
 autoUpdater.autoDownload = false
 
 autoUpdater.on('error', error => {
-  win.webContents.send('update-available')
+  win.webContents.send('update-error', error)
 })
 
 autoUpdater.on('update-available', () => {

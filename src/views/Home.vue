@@ -247,11 +247,17 @@ export default {
     ipcRenderer.on('update-downloaded', () => {
       this.restart = false
     })
-    ipcRenderer.on('download-update', value => {
+    ipcRenderer.on('download-update', () => {
       this.downloadVisibile = true
     })
     ipcRenderer.on('download-progress', value => {
       this.percentage = value
+    })
+    ipcRenderer.on('update-error', error => {
+      this.$message({
+        type: 'error',
+        message: error == null ? 'unknown' : (error.stack || error).toString(),
+      })
     })
   },
   methods: {
