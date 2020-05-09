@@ -97,6 +97,31 @@
         >
       </span>
     </el-dialog>
+    <el-dialog
+      :visible.sync="downloadVisibile"
+      width="500px"
+      title="下载更新..."
+    >
+      <p>
+        <el-progress
+          :text-inside="true"
+          :stroke-width="15"
+          :percentage="percentage"
+        ></el-progress>
+      </p>
+      <span slot="footer" class="dialog-footer">
+        <el-button
+          type="primary"
+          @click="quitAndInstall"
+          size="small"
+          :disabled="restart"
+          >重启安装更新</el-button
+        >
+        <el-button @click="checkDialogVisible = false" size="small"
+          >取 消</el-button
+        >
+      </span>
+    </el-dialog>
 
     <div class="container">
       <div>
@@ -189,6 +214,9 @@ export default {
       },
       browser: '',
       browserPath: '',
+      downloadVisibile: false,
+      restart: true,
+      percentage: 0,
     }
   },
   computed: {
@@ -196,8 +224,40 @@ export default {
       return this.linkList.filter(link => link.loved)
     },
   },
-  mounted() {},
+  mounted() {
+    ipcRenderer.on('update-available', () => {
+      this.$confirm('已检测到软件更新，是否更新软件', '提示', {
+        confirmButtonText: '更新',
+        cancelButtonText: '不更新',
+        type: 'info',
+      })
+        .then(() => {
+          ipcRenderer.send('downloadUpdate')
+        })
+        .catch(() => {
+          ipcRenderer.send('cancelDownloadUpdate')
+        })
+    })
+    ipcRenderer.on('update-not-available', () => {
+      this.$alert('当前软件已是最新版本', '没有检查到更新', {
+        confirmButtonText: '确定',
+      })
+    })
+
+    ipcRenderer.on('update-downloaded', () => {
+      this.restart = false
+    })
+    ipcRenderer.on('download-update', value => {
+      this.downloadVisibile = true
+    })
+    ipcRenderer.on('download-progress', value => {
+      this.percentage = value
+    })
+  },
   methods: {
+    quitAndInstall() {
+      ipcRenderer.send('quitAndInstall')
+    },
     getLocation() {
       const location = ipcRenderer.sendSync('checkBrowser')
       console.log(location)
