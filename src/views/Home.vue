@@ -250,11 +250,11 @@ export default {
     ipcRenderer.on('download-update', () => {
       this.downloadVisibile = true
     })
-    ipcRenderer.on('download-progress', obj => {
+    ipcRenderer.on('download-progress', (event, obj) => {
       console.log(obj)
       this.percentage = obj.percent
     })
-    ipcRenderer.on('update-error', error => {
+    ipcRenderer.on('update-error', (event, error) => {
       this.$message({
         type: 'error',
         message: error == null ? 'unknown' : (error.stack || error).toString(),
