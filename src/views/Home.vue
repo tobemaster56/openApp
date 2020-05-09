@@ -254,7 +254,7 @@ export default {
       this.downloadTitle = '下载更新...'
     })
     ipcRenderer.on('download-progress', (event, obj) => {
-      this.percentage = obj.percent
+      this.percentage = Math.floor(obj.percent)
     })
     ipcRenderer.on('update-error', (event, error) => {
       this.$message({

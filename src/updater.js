@@ -40,6 +40,10 @@ autoUpdater.on('update-not-available', () => {
   updater = null
 })
 
+autoUpdater.on('update-downloaded', () => {
+  win.webContents.send('update-downloaded')
+})
+
 autoUpdater.on('download-progress', value => {
   win.webContents.send('download-progress', value)
 })
